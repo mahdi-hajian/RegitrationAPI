@@ -10,8 +10,8 @@ using RegitrationAPI.Data;
 namespace RegitrationAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180721193825_addModel")]
-    partial class addModel
+    [Migration("20180722072257_InitModel")]
+    partial class InitModel
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -43,6 +43,28 @@ namespace RegitrationAPI.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("Role");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<string>", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ConcurrencyStamp");
+
+                    b.Property<string>("Name");
+
+                    b.Property<string>("NormalizedName");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IdentityRole<string>");
+
+                    b.HasData(
+                        new { Id = "74c66695-52f0-49c0-98e7-af7d97f0f337", ConcurrencyStamp = "784f42ef-8e42-4297-abb3-1de7765879f8", Name = "Admin", NormalizedName = "ADMIN" },
+                        new { Id = "eada3064-3eb3-4735-ab44-522295a5f548", ConcurrencyStamp = "145f866d-1aca-4eee-88a8-8ad55e0104f2", Name = "Manager", NormalizedName = "MANAGER" },
+                        new { Id = "17805555-1935-4fff-a559-71b7ce371d8e", ConcurrencyStamp = "da9579c3-b3b4-4c70-ab81-dd048e5b3223", Name = "User", NormalizedName = "USER" }
+                    );
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

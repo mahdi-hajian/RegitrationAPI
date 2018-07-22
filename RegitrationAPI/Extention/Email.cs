@@ -13,6 +13,26 @@ namespace RegitrationAPI.Extention
     {
         private static readonly string EmailSender = "AgentMahdihajian@gmail.com";
         private static readonly string PasswordEmailSender = "";
+
+        #region Send Email
+        public async static void SendEmail(string EmailTo, string body, string subject) {
+            MailMessage mail = new MailMessage();
+            SmtpClient SmtpServer = new SmtpClient("smtp.gmail.com");
+
+            mail.From = new MailAddress(EmailSender);
+            mail.To.Add(EmailTo);
+            mail.Subject = subject;
+            mail.Body = body;
+            mail.BodyEncoding = Encoding.UTF8;
+            SmtpServer.Port = 587;
+            SmtpServer.Credentials = new System.Net.NetworkCredential(EmailSender, PasswordEmailSender);
+            SmtpServer.EnableSsl = true;
+
+            await SmtpServer.SendMailAsync(mail);
+        }
+        #endregion
+
+        #region SendEmailAfterRegistration
         //متد ارسال ایمیل بعد از ثبت نام
         /// <summary>
         /// send email after registration
@@ -22,7 +42,7 @@ namespace RegitrationAPI.Extention
         /// <param name="password"></param>
         /// <param name="code"></param>
         /// <param name="firstName"></param>
-        public static void SendEmailAfterRegistration(string Email, string userName, string password, string code, string firstName)
+        public static void SendEmailAfterRegistration(string email, string userName, string password, string code, string firstName)
         {
             try
             {
@@ -43,45 +63,39 @@ namespace RegitrationAPI.Extention
                                 .Replace("[Code]", code)
                                 .Replace("[FIRST_NAME]", firstName);
 
-                MailMessage mail = new MailMessage();
-                SmtpClient SmtpServer = new SmtpClient("smtp.gmail.com");
-
-                mail.From = new MailAddress(EmailSender);
-                mail.To.Add(Email);
-                mail.Subject = "تایید ثبت نام";
-                mail.Body = strEmailBody;
-                mail.BodyEncoding = Encoding.UTF8;
-                SmtpServer.Port = 587;
-                SmtpServer.Credentials = new System.Net.NetworkCredential(EmailSender, PasswordEmailSender);
-                SmtpServer.EnableSsl = true;
-
-                SmtpServer.Send(mail);
+               SendEmail(email, strEmailBody, "تایید ایمیل");
             }
             catch (Exception)
             {
             }
         }
-        //#######################################################################
+        #endregion
 
-
+        #region SendComfirmEmailAgain
         /// متد ارسال کلید تائید به کاربراگر هنگام ثبت نام عمل تائیدیه انجام نشد و اقدام به لاگین نمود
-        public static void Sendcode(string userId, string userName, string code, string firstName)
-        {
-            SendEmailAfterRegistration(userId, userName, "Account Password", code, firstName);
-        }
 
-        //#######################################################################
-
-
-        //متد ارسال ایمیل برای فراموشی رمز عبور
         /// <summary>
-        /// send email for forget password
+        /// if user want to send confirm email again
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="userName"></param>
         /// <param name="code"></param>
-        public static void SendEmailForgotPassword
-            (string userId, string userName, string code)
+        /// <param name="firstName"></param>
+        public static void SendComfirmEmailAgain(string userId, string userName, string code, string firstName)
+        {
+            SendEmailAfterRegistration(userId, userName, "Password", code, firstName);
+        }
+        #endregion
+
+        #region SendEmailForgotPassword
+        //متد ارسال ایمیل برای فراموشی رمز عبور
+        /// <summary>
+        /// send email for forget password
+        /// </summary>
+        /// <param name="firstName"></param>
+        /// <param name="userName"></param>
+        /// <param name="code"></param>
+        public static void SendEmailForgotPassword(string email, string firstName, string userName, string code)
         {
             //استفاده از قالب موجود در ای پی پی دیتا
             string strRootRelativePathName =
@@ -96,21 +110,17 @@ namespace RegitrationAPI.Extention
 
             //جایگزینی مقادیر موجود در فایل خوانده شده با مقادیر داده شده
             strEmailBody = strEmailBody
-                            .Replace("[USER_ID]", userId)
+                            .Replace("[FIRST_NAME]", firstName)
                             .Replace("[USER_NAME]", userName)
                             .Replace("[CODE]", code);
-            //ایجاد یک شی از میل آدرس با 3 پارامتر
-            System.Net.Mail.MailAddress oMailAddress =
-                new System.Net.Mail.MailAddress(userName, userId, System.Text.Encoding.UTF8);
-            //استفاده از متد سند کلاس میل مسیج
-            // MailMessage.Send
-            // (oMailAddress, "بازیابی گذرواژه!", strEmailBody, System.Net.Mail.MailPriority.High);
-        }
 
-        //#######################################################################
+            SendEmail(email, strEmailBody, "بازیابی گذرواژه");
+        }
+        #endregion
+
+
         //متد ارسال خبرنامه
-        public static void SendNewsLetter
-            (string userId, string email, string category, string name, string content)
+        public static void SendNewsLetter (string userId, string email, string category, string name, string content)
         {
             //استفاده از قالب موجود در ای پی پی دیتا
             string strRootRelativePathName =
@@ -137,11 +147,9 @@ namespace RegitrationAPI.Extention
             // (oMailAddress, "خبرنامه!", strEmailBody, System.Net.Mail.MailPriority.High);
         }
 
-        //#######################################################################
 
         //متد ارسال تماس با ما
-        public static void SendContact
-            (string name, string email, string subject, string message)
+        public static void SendContact (string name, string email, string subject, string message)
         {
             //استفاده از قالب موجود در ای پی پی دیتا
             string strRootRelativePathName =
@@ -168,6 +176,5 @@ namespace RegitrationAPI.Extention
             // (oMailAddress, "تماس با ما!", strEmailBody, System.Net.Mail.MailPriority.High);
         }
 
-        //#######################################################################
     }
 }

@@ -110,18 +110,6 @@ namespace RegitrationAPI.Controllers
                 result = await _userManager.CreateAsync(user, model.Password);
                 #endregion
 
-                #region Create Roles
-                if (!await _roleManager.RoleExistsAsync("Admin"))
-                {
-                    var users1 = new IdentityRole("Admin");
-                    var users2 = new IdentityRole("Manager");
-                    var users3 = new IdentityRole("User");
-                    await _roleManager.CreateAsync(users1);
-                    await _roleManager.CreateAsync(users2);
-                    await _roleManager.CreateAsync(users3);
-                }
-                #endregion
-
                 #region set roles
                 if (user.UserName.ToUpper() == "ADMIN")
                 {
@@ -222,7 +210,7 @@ namespace RegitrationAPI.Controllers
                         Message = "شما با موفقیت وارد شدید"
                     });
                     #endregion
-                    
+
                 }
             }
             catch (Exception)
@@ -230,6 +218,50 @@ namespace RegitrationAPI.Controllers
             }
 
             return Unauthorized();
+        }
+        #endregion
+
+        #region GetDetails
+        [HttpGet]
+        [Authorize(Roles = "User")]
+        [Route("GetDetails")]
+        public List<string> GetDetails([FromHeader] string Authorization)
+        {
+            List<string> lstDetails = null;
+            try
+            {
+                var Ramovebearer = Authorization.Replace("bearer ", "");
+                var Token = new JwtSecurityToken(Ramovebearer);
+                var ClaimsLST = Token.Claims;
+                lstDetails = new List<string>();
+                foreach (var item in ClaimsLST)
+                {
+                    lstDetails.Add(item.Type + " : " + item.Value);
+                }
+
+                for (int i = 0; i < ClaimsLST.Count(); i++)
+                {
+                    if (i > 4)
+                    {
+                        lstDetails.RemoveAt(5);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return lstDetails;
+        }
+        #endregion
+
+        #region IsUserLogin
+        [Authorize]
+        [HttpGet]
+        [Route("IsUserLogin")]
+        public bool IsUserLogin()
+        {
+            return true;
         }
         #endregion
 
@@ -259,32 +291,53 @@ namespace RegitrationAPI.Controllers
         }
         #endregion
 
-        #region GetDetails
-        [Authorize(Roles = "User")]
         [HttpGet]
-        [Route("GetDetails")]
-        public List<string> GetDetails([FromHeader] string Authorization)
+        [Route("ResetPassword")]
+        public async Task<IdentityResult> ResetPassword([FromHeader] string UserName, [FromHeader] string Token, [FromHeader] string NewPassword)
         {
-            var Ramovebearer = Authorization.Replace("bearer ", "");
-            var Token = new JwtSecurityToken(Ramovebearer);
-            var ClaimsLST = Token.Claims;
-            List<string> lstDetails = new List<string>();
-            foreach (var item in ClaimsLST)
+            var result = IdentityResult.Failed(new IdentityError()
             {
-                lstDetails.Add(item.Type + " : " + item.Value);
-            }
-
-            for (int i = 0; i < ClaimsLST.Count(); i++)
+                Code = "InvalidUserName",
+                Description = "این نام کاربری ثبت نشده است"
+            });
+            try
             {
-                if (i > 4)
+                var user = await _userManager.FindByNameAsync(UserName);
+                if (user != null)
                 {
-                    lstDetails.RemoveAt(5);
+                    result = await _userManager.ResetPasswordAsync(user, Token, NewPassword);
                 }
             }
-
-            return lstDetails;
+            catch (Exception)
+            {
+            }
+            return result;
         }
-        #endregion
 
+        [HttpGet]
+        [Route("RequestForResetPassword")]
+        public async Task<IdentityResult> RequestForResetPassword([FromHeader] string email)
+        {
+            var result = IdentityResult.Failed(new IdentityError()
+            {
+                Code = "InvalidEmail",
+                Description = "این ایمیل در سیستم ثبت نشده است"
+            });
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    string code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    code = HttpUtility.UrlEncode(code);
+                    Email.SendEmailForgotPassword(user.Email, user.FirstName, user.UserName, code);
+                    return IdentityResult.Success;
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return result;
+        }
     }
 }

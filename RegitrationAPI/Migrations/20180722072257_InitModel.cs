@@ -4,10 +4,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace RegitrationAPI.Migrations
 {
-    public partial class addModel : Migration
+    public partial class InitModel : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "IdentityRole<string>",
+                columns: table => new
+                {
+                    Id = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    NormalizedName = table.Column<string>(nullable: true),
+                    ConcurrencyStamp = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_IdentityRole<string>", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Role",
                 columns: table => new
@@ -179,6 +193,21 @@ namespace RegitrationAPI.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "IdentityRole<string>",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[] { "74c66695-52f0-49c0-98e7-af7d97f0f337", "784f42ef-8e42-4297-abb3-1de7765879f8", "Admin", "ADMIN" });
+
+            migrationBuilder.InsertData(
+                table: "IdentityRole<string>",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[] { "eada3064-3eb3-4735-ab44-522295a5f548", "145f866d-1aca-4eee-88a8-8ad55e0104f2", "Manager", "MANAGER" });
+
+            migrationBuilder.InsertData(
+                table: "IdentityRole<string>",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[] { "17805555-1935-4fff-a559-71b7ce371d8e", "da9579c3-b3b4-4c70-ab81-dd048e5b3223", "User", "USER" });
+
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
                 table: "Role",
@@ -226,6 +255,9 @@ namespace RegitrationAPI.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "IdentityRole<string>");
+
             migrationBuilder.DropTable(
                 name: "RoleClaim");
 

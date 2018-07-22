@@ -12,7 +12,7 @@ namespace RegitrationAPI.Data
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        
+
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -23,6 +23,31 @@ namespace RegitrationAPI.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            #region Seed
+            builder.Entity<IdentityRole>().HasData(
+                new IdentityRole
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "Admin",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                    NormalizedName = "ADMIN"
+                },
+                new IdentityRole
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "Manager",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                    NormalizedName = "MANAGER"
+                },
+                new IdentityRole
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "User",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                    NormalizedName = "USER"
+                });
+            #endregion
 
             #region Lazy Loading
             builder.Entity<ApplicationUser>().Property(date => date.RegisterDate).HasDefaultValueSql("GETDATE()");
@@ -43,9 +68,6 @@ namespace RegitrationAPI.Data
             builder.Entity<IdentityUserRole<string>>().ToTable("UserRole");
             builder.Entity<IdentityUserToken<string>>().ToTable("UserToken");
             #endregion
-
-            
-
         }
     }
 }
