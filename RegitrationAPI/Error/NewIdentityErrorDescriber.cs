@@ -55,6 +55,7 @@ namespace RegitrationAPI.Error
 
         public override IdentityError InvalidEmail(string email)
         {
+            
             return new IdentityError()
             {
                 Code = "ایمیل نامعتبر",
@@ -75,8 +76,8 @@ namespace RegitrationAPI.Error
         {
             return new IdentityError()
             {
-                Code = "توکن نامعتبر",
-                Description = "توکن نامعتبر است"
+                Code = "توکن نامعتبر است",
+                Description = "لینک فعال سازی نامعتبر است"
             };
         }
 

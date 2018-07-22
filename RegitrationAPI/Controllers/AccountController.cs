@@ -291,6 +291,7 @@ namespace RegitrationAPI.Controllers
         }
         #endregion
 
+        #region ResetPassword
         [HttpGet]
         [Route("ResetPassword")]
         public async Task<IdentityResult> ResetPassword([FromHeader] string UserName, [FromHeader] string Token, [FromHeader] string NewPassword)
@@ -306,6 +307,7 @@ namespace RegitrationAPI.Controllers
                 if (user != null)
                 {
                     result = await _userManager.ResetPasswordAsync(user, Token, NewPassword);
+
                 }
             }
             catch (Exception)
@@ -313,7 +315,9 @@ namespace RegitrationAPI.Controllers
             }
             return result;
         }
+        #endregion
 
+        #region RequestForResetPassword
         [HttpGet]
         [Route("RequestForResetPassword")]
         public async Task<IdentityResult> RequestForResetPassword([FromHeader] string email)
@@ -339,5 +343,6 @@ namespace RegitrationAPI.Controllers
             }
             return result;
         }
+        #endregion
     }
 }
