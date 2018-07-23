@@ -461,7 +461,8 @@ New Password : {passwordModel.NewPassword}";
                 {
                     var code = await _userManager.GenerateChangeEmailTokenAsync(user, NewEmail);
                     code = HttpUtility.UrlEncode(code);
-                    Email.ChangeEmail(NewEmail, user.UserName, code, user.Id);
+                    var UserID = HttpUtility.UrlEncode(user.Id);
+                    Email.ChangeEmail(NewEmail, user.UserName, code, UserID);
                     result = IdentityResult.Success;
                 }
                 #endregion
