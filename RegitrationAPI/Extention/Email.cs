@@ -15,20 +15,27 @@ namespace RegitrationAPI.Extention
         private static readonly string PasswordEmailSender = "";
 
         #region Send Email
-        public async static void SendEmail(string EmailTo, string body, string subject) {
-            MailMessage mail = new MailMessage();
-            SmtpClient SmtpServer = new SmtpClient("smtp.gmail.com");
+        public async static void SendEmail(string EmailTo, string body, string subject)
+        {
+            try
+            {
+                MailMessage mail = new MailMessage();
+                SmtpClient SmtpServer = new SmtpClient("smtp.gmail.com");
 
-            mail.From = new MailAddress(EmailSender);
-            mail.To.Add(EmailTo);
-            mail.Subject = subject;
-            mail.Body = body;
-            mail.BodyEncoding = Encoding.UTF8;
-            SmtpServer.Port = 587;
-            SmtpServer.Credentials = new System.Net.NetworkCredential(EmailSender, PasswordEmailSender);
-            SmtpServer.EnableSsl = true;
+                mail.From = new MailAddress(EmailSender);
+                mail.To.Add(EmailTo);
+                mail.Subject = subject;
+                mail.Body = body;
+                mail.BodyEncoding = Encoding.UTF8;
+                SmtpServer.Port = 587;
+                SmtpServer.Credentials = new System.Net.NetworkCredential(EmailSender, PasswordEmailSender);
+                SmtpServer.EnableSsl = true;
 
-            await SmtpServer.SendMailAsync(mail);
+                await SmtpServer.SendMailAsync(mail);
+            }
+            catch (Exception)
+            {
+            }
         }
         #endregion
 
@@ -63,7 +70,7 @@ namespace RegitrationAPI.Extention
                                 .Replace("[Code]", code)
                                 .Replace("[FIRST_NAME]", firstName);
 
-               SendEmail(email, strEmailBody, "تایید ایمیل");
+                SendEmail(email, strEmailBody, "تایید ایمیل");
             }
             catch (Exception)
             {
@@ -81,9 +88,9 @@ namespace RegitrationAPI.Extention
         /// <param name="userName"></param>
         /// <param name="code"></param>
         /// <param name="firstName"></param>
-        public static void SendComfirmEmailAgain(string userId, string userName, string code, string firstName)
+        public static void SendComfirmEmailAgain(string email, string userName, string code, string firstName)
         {
-            SendEmailAfterRegistration(userId, userName, "Password", code, firstName);
+            SendEmailAfterRegistration(email, userName, "Password", code, firstName);
         }
         #endregion
 
@@ -120,7 +127,7 @@ namespace RegitrationAPI.Extention
 
 
         //متد ارسال خبرنامه
-        public static void SendNewsLetter (string userId, string email, string category, string name, string content)
+        public static void SendNewsLetter(string userId, string email, string category, string name, string content)
         {
             //استفاده از قالب موجود در ای پی پی دیتا
             string strRootRelativePathName =
@@ -149,7 +156,7 @@ namespace RegitrationAPI.Extention
 
 
         //متد ارسال تماس با ما
-        public static void SendContact (string name, string email, string subject, string message)
+        public static void SendContact(string name, string email, string subject, string message)
         {
             //استفاده از قالب موجود در ای پی پی دیتا
             string strRootRelativePathName =

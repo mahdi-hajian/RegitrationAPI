@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RegitrationAPI.Model;
 using RegitrationAPI.Data;
-using System.Globalization;
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -17,10 +15,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System.Web;
 using RegitrationAPI.Extention;
-using System.Net.Mail;
-using Telegram.Bot;
-using System.Net.Http;
-using System.Net.Http.Headers;
 
 namespace RegitrationAPI.Controllers
 {
@@ -344,5 +338,82 @@ namespace RegitrationAPI.Controllers
             return result;
         }
         #endregion
+
+        #region ConfirmEmailAgain
+        [HttpGet]
+        [Authorize(Roles = "User")]
+        [Route("ConfirmEmailAgain")]
+        public async Task<IdentityResult> ConfirmEmailAgain([FromHeader] string Authorization)
+        {
+            var result = IdentityResult.Failed(new IdentityError()
+            {
+                Code = "InvalidEmail",
+                Description = "این ایمیل در سیستم ثبت نشده است"
+            });
+
+            try
+            {
+                var Ramovebearer = Authorization.Replace("bearer ", "");
+                var Token = new JwtSecurityToken(Ramovebearer);
+                var ClaimsLST = Token.Claims.ToArray();
+                var userEmail = ClaimsLST[1];
+                var user = await _userManager.FindByEmailAsync(userEmail.Value);
+                if (user != null)
+                {
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    code = HttpUtility.UrlEncode(code);
+                    Email.SendComfirmEmailAgain(user.Email, user.UserName, code, user.FirstName);
+                    return IdentityResult.Success;
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return result;
+        }
+        #endregion
+
+        #region ChangePassword
+
+        #endregion
+        [HttpPost]
+        [Authorize(Roles = "User")]
+        [Route("ChangePassword")]
+        public async Task<IdentityResult> ChangePassword([FromHeader] string Authorization, [FromBody] ChangePasswordModel passwordModel)
+        {
+            var result = IdentityResult.Failed(new IdentityError()
+            {
+                Code = "InvalidEmail",
+                Description = "برای این نام کاربری پسوردی در سیستم وجود ندارد"
+            });
+            try
+            {
+                var Ramovebearer = Authorization.Replace("bearer ", "");
+                var Token = new JwtSecurityToken(Ramovebearer);
+                var ClaimsLST = Token.Claims.ToArray();
+                var userUserName = ClaimsLST[0];
+                var user = await _userManager.FindByNameAsync(userUserName.Value);
+                if (user != null)
+                {
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    code = HttpUtility.UrlEncode(code);
+                    result = await _userManager.ChangePasswordAsync(user, passwordModel.CurrentPassword, passwordModel.NewPassword);
+                    if (result == IdentityResult.Success)
+                    {
+                    string Body = $@"هشدار تغییر رمز عبور
+
+رمز عبور شما تغییر کرده است و مشخصات جدید شما به این صورت میباشد
+User Name : {user.UserName}
+New Password : {passwordModel.NewPassword}";
+                    Email.SendEmail(user.Email, Body, "تغییر رمز عبور");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return result;
+        }
     }
 }
