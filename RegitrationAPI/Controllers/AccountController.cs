@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System.Web;
 using RegitrationAPI.Extention;
+using System.Security.Cryptography;
+using System.IO;
 
 namespace RegitrationAPI.Controllers
 {
@@ -118,14 +120,17 @@ namespace RegitrationAPI.Controllers
                 #endregion
 
                 #region sendEmailConfirm
-                try
+                if (result == IdentityResult.Success)
                 {
-                    string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = HttpUtility.UrlEncode(code);
-                    Email.SendEmailAfterRegistration(user.Email, user.UserName, model.Password, code, user.FirstName);
-                }
-                catch (Exception)
-                {
+                    try
+                    {
+                        string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        code = HttpUtility.UrlEncode(code);
+                        Email.SendEmailAfterRegistration(user.Email, user.UserName, model.Password, code, user.FirstName);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
                 #endregion
             }
@@ -267,7 +272,7 @@ namespace RegitrationAPI.Controllers
             var result = IdentityResult.Failed(new IdentityError()
             {
                 Code = "InvalidUserName",
-                Description = "این نام کاربری ثبت نشده است"
+                Description = "این لینک معتبر نمیباشد"
             });
 
             try
@@ -375,8 +380,6 @@ namespace RegitrationAPI.Controllers
         #endregion
 
         #region ChangePassword
-
-        #endregion
         [HttpPost]
         [Authorize(Roles = "User")]
         [Route("ChangePassword")]
@@ -384,8 +387,8 @@ namespace RegitrationAPI.Controllers
         {
             var result = IdentityResult.Failed(new IdentityError()
             {
-                Code = "InvalidEmail",
-                Description = "برای این نام کاربری پسوردی در سیستم وجود ندارد"
+                Code = "InvalidLink",
+                Description = "این لینک معتبر نمیباشد"
             });
             try
             {
@@ -401,12 +404,12 @@ namespace RegitrationAPI.Controllers
                     result = await _userManager.ChangePasswordAsync(user, passwordModel.CurrentPassword, passwordModel.NewPassword);
                     if (result == IdentityResult.Success)
                     {
-                    string Body = $@"هشدار تغییر رمز عبور
+                        string Body = $@"هشدار تغییر رمز عبور
 
 رمز عبور شما تغییر کرده است و مشخصات جدید شما به این صورت میباشد
 User Name : {user.UserName}
 New Password : {passwordModel.NewPassword}";
-                    Email.SendEmail(user.Email, Body, "تغییر رمز عبور");
+                        Email.SendEmail(user.Email, Body, "تغییر رمز عبور");
                     }
                 }
             }
@@ -415,5 +418,138 @@ New Password : {passwordModel.NewPassword}";
             }
             return result;
         }
+        #endregion
+
+        #region RequestChangeEmail
+        [HttpGet]
+        [Authorize(Roles = "User")]
+        [Route("RequestChangeEmail")]
+        public async Task<IdentityResult> RequestChangeEmail([FromHeader] string Authorization,[FromQuery] string NewEmail)
+        {
+            #region DefaultResult
+            var result = IdentityResult.Failed(new IdentityError()
+            {
+                Code = "InvalidUserName",
+                Description = "این نام کاربری ثبت نشده است"
+            });
+            try
+            {
+                System.Net.Mail.MailAddress mailAddress = new System.Net.Mail.MailAddress(NewEmail);
+
+            }
+            catch (FormatException)
+            {
+                return result = IdentityResult.Failed(new IdentityError()
+                {
+                    Code = "InvalidEmail",
+                    Description = "لطفا یک ایمیل معتبر وارد کنید"
+                });
+            }
+            #endregion
+            try
+            {
+                #region GetUserFromAuthorization
+                var Ramovebearer = Authorization.Replace("bearer ", "");
+                var Token = new JwtSecurityToken(Ramovebearer);
+                var ClaimsLST = Token.Claims.ToArray();
+                var userUserName = ClaimsLST[0];
+                var user = await _userManager.FindByNameAsync(userUserName.Value);
+                #endregion
+
+                #region SendChangeEmail'sEmail
+                if (user != null)
+                {
+                    var code = await _userManager.GenerateChangeEmailTokenAsync(user, NewEmail);
+                    code = HttpUtility.UrlEncode(code);
+                    Email.ChangeEmail(NewEmail, user.UserName, code, user.Id);
+                    result = IdentityResult.Success;
+                }
+                #endregion
+            }
+            catch (Exception e)
+            {
+            }
+            return result;
+        }
+        #endregion
+
+        #region ChangeEmail
+        [HttpPost]
+        [Route("ChangeEmail")]
+        public async Task<IdentityResult> ChangeEmail([FromBody] ChangeEmailModel ChangeEmail, [FromHeader] string Token)
+        {
+            var result = IdentityResult.Failed(new IdentityError()
+            {
+                Code = "InvalidLink",
+                Description = "این لینک معتبر نمیباشد"
+            });
+            try
+            {
+                var user = await _userManager.FindByIdAsync(ChangeEmail.UserId);
+                if (user != null)
+                {
+                    result = await _userManager.ChangeEmailAsync(user, ChangeEmail.NewEmail, Token);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return result;
+        }
+        #endregion
+
+
+        #region encrypt
+        public string Encrypt(string encryptString)
+        {
+            string EncryptionKey = "kjdsfhsikdy87f6yasd8fgyasdlkfgjasdhfg";
+            byte[] clearBytes = Encoding.Unicode.GetBytes(encryptString);
+            using (Aes encryptor = Aes.Create())
+            {
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] {
+            0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76
+        });
+                encryptor.Key = pdb.GetBytes(32);
+                encryptor.IV = pdb.GetBytes(16);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateEncryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(clearBytes, 0, clearBytes.Length);
+                        cs.Close();
+                    }
+                    encryptString = Convert.ToBase64String(ms.ToArray());
+                }
+            }
+            return encryptString;
+        }
+        #endregion
+
+        #region Decrypt
+        public string Decrypt(string cipherText)
+        {
+            string EncryptionKey = "kjdsfhsikdy87f6yasd8fgyasdlkfgjasdhfg";
+            cipherText = cipherText.Replace(" ", "+");
+            byte[] cipherBytes = Convert.FromBase64String(cipherText);
+            using (Aes encryptor = Aes.Create())
+            {
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] {
+            0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76
+        });
+                encryptor.Key = pdb.GetBytes(32);
+                encryptor.IV = pdb.GetBytes(16);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(cipherBytes, 0, cipherBytes.Length);
+                        cs.Close();
+                    }
+                    cipherText = Encoding.Unicode.GetString(ms.ToArray());
+                }
+            }
+            return cipherText;
+        }
+        #endregion
     }
 }

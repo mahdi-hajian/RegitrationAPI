@@ -26,6 +26,7 @@ namespace RegitrationAPI.Extention
                 mail.To.Add(EmailTo);
                 mail.Subject = subject;
                 mail.Body = body;
+                mail.IsBodyHtml = true;
                 mail.BodyEncoding = Encoding.UTF8;
                 SmtpServer.Port = 587;
                 SmtpServer.Credentials = new System.Net.NetworkCredential(EmailSender, PasswordEmailSender);
@@ -124,6 +125,33 @@ namespace RegitrationAPI.Extention
             SendEmail(email, strEmailBody, "بازیابی گذرواژه");
         }
         #endregion
+
+        #region Change Email
+        
+        public static void ChangeEmail(string email, string userName, string code, string userId)
+        {
+            //استفاده از قالب موجود در ای پی پی دیتا
+            string strRootRelativePathName =
+                "App_Data/LocalizedEmailTemplates/ChangeEmail.htm";
+
+            //ایجاد یک رشته و مراحل تبدیل مراحل نسبی به فیزیکی
+            string strPathName =
+                Path.GetFullPath(strRootRelativePathName);
+
+            //استفاده از متد رید کلاس فایل برای خواندن مسیر فیزیکی
+            string strEmailBody = File.ReadAllText(strPathName);
+
+            //جایگزینی مقادیر موجود در فایل خوانده شده با مقادیر داده شده
+            strEmailBody = strEmailBody
+                            .Replace("[USERID]", userId)
+                            .Replace("[EMAIL]", email)
+                            .Replace("[USER_NAME]", userName)
+                            .Replace("[CODE]", code);
+
+            SendEmail(email, strEmailBody, "تغییر ایمیل");
+        }
+        #endregion
+
 
 
         //متد ارسال خبرنامه
