@@ -29,6 +29,12 @@ namespace RegitrationAPI.Data
                 new IdentityRole
                 {
                     Id = Guid.NewGuid().ToString(),
+                    Name = "Leader",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                    NormalizedName = "LEADER"
+                }, new IdentityRole
+                {
+                    Id = Guid.NewGuid().ToString(),
                     Name = "Admin",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                     NormalizedName = "ADMIN"

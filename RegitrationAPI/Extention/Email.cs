@@ -50,7 +50,7 @@ namespace RegitrationAPI.Extention
         /// <param name="password"></param>
         /// <param name="code"></param>
         /// <param name="firstName"></param>
-        public static void SendEmailAfterRegistration(string email, string userName, string password, string code, string firstName)
+        public static void SendEmailAfterRegistration(string email, string userName, string password, string code, string firstName, string userId)
         {
             try
             {
@@ -67,8 +67,8 @@ namespace RegitrationAPI.Extention
                 strEmailBody = strEmailBody
                                 .Replace("[USER_NAME]", userName)
                                 .Replace("[PASSWORD]", password)
-                                .Replace("[UserName]", userName)
                                 .Replace("[Code]", code)
+                                .Replace("[UserId]", userId)
                                 .Replace("[FIRST_NAME]", firstName);
 
                 SendEmail(email, strEmailBody, "تایید ایمیل");
@@ -89,9 +89,9 @@ namespace RegitrationAPI.Extention
         /// <param name="userName"></param>
         /// <param name="code"></param>
         /// <param name="firstName"></param>
-        public static void SendComfirmEmailAgain(string email, string userName, string code, string firstName)
+        public static void SendComfirmEmailAgain(string email, string userName, string code, string firstName, string userId)
         {
-            SendEmailAfterRegistration(email, userName, "Password", code, firstName);
+            SendEmailAfterRegistration(email, userName, "Password", code, firstName, userId);
         }
         #endregion
 
@@ -103,7 +103,7 @@ namespace RegitrationAPI.Extention
         /// <param name="firstName"></param>
         /// <param name="userName"></param>
         /// <param name="code"></param>
-        public static void SendEmailForgotPassword(string email, string firstName, string userName, string code)
+        public static void SendEmailForgotPassword(string email, string firstName, string userName, string code, string userId)
         {
             //استفاده از قالب موجود در ای پی پی دیتا
             string strRootRelativePathName =
@@ -120,6 +120,7 @@ namespace RegitrationAPI.Extention
             strEmailBody = strEmailBody
                             .Replace("[FIRST_NAME]", firstName)
                             .Replace("[USER_NAME]", userName)
+                            .Replace("[USER_ID]", userId)
                             .Replace("[CODE]", code);
 
             SendEmail(email, strEmailBody, "بازیابی گذرواژه");
@@ -152,8 +153,7 @@ namespace RegitrationAPI.Extention
         }
         #endregion
 
-
-
+        #region MyRegion
         //متد ارسال خبرنامه
         public static void SendNewsLetter(string userId, string email, string category, string name, string content)
         {
@@ -210,6 +210,7 @@ namespace RegitrationAPI.Extention
             // MailMessage.Send
             // (oMailAddress, "تماس با ما!", strEmailBody, System.Net.Mail.MailPriority.High);
         }
+        #endregion
 
     }
 }

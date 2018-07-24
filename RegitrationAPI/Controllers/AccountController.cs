@@ -109,6 +109,7 @@ namespace RegitrationAPI.Controllers
                 #region set roles
                 if (user.UserName.ToUpper() == "ADMIN")
                 {
+                    await _userManager.AddToRoleAsync(user, "Leader");
                     await _userManager.AddToRoleAsync(user, "Admin");
                     await _userManager.AddToRoleAsync(user, "Manager");
                     await _userManager.AddToRoleAsync(user, "User");
@@ -126,7 +127,7 @@ namespace RegitrationAPI.Controllers
                     {
                         string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                         code = HttpUtility.UrlEncode(code);
-                        Email.SendEmailAfterRegistration(user.Email, user.UserName, model.Password, code, user.FirstName);
+                        Email.SendEmailAfterRegistration(user.Email, user.UserName, model.Password, code, user.FirstName, user.Id);
                     }
                     catch (Exception)
                     {
@@ -267,7 +268,7 @@ namespace RegitrationAPI.Controllers
         #region ConfirmEmail
         [HttpGet]
         [Route("ConfirmEmail")]
-        public async Task<IdentityResult> ConfirmEmail([FromHeader] string UserName, [FromHeader] string Token)
+        public async Task<IdentityResult> ConfirmEmail([FromQuery] string userId, [FromHeader] string Token)
         {
             var result = IdentityResult.Failed(new IdentityError()
             {
@@ -277,7 +278,7 @@ namespace RegitrationAPI.Controllers
 
             try
             {
-                var user = await _userManager.FindByNameAsync(UserName);
+                var user = await _userManager.FindByIdAsync(userId);
                 if (user != null)
                 {
                     result = await _userManager.ConfirmEmailAsync(user, Token);
@@ -290,22 +291,22 @@ namespace RegitrationAPI.Controllers
         }
         #endregion
 
-        #region ResetPassword
-        [HttpGet]
-        [Route("ResetPassword")]
-        public async Task<IdentityResult> ResetPassword([FromHeader] string UserName, [FromHeader] string Token, [FromHeader] string NewPassword)
+        #region ForgetPassword
+        [HttpPost]
+        [Route("ForgetPassword")]
+        public async Task<IdentityResult> ForgetPassword([FromBody] ForgetPasswordModel forgetPassword, [FromHeader] string Token)
         {
             var result = IdentityResult.Failed(new IdentityError()
             {
-                Code = "InvalidUserName",
-                Description = "این نام کاربری ثبت نشده است"
+                Code = "InvalidUser",
+                Description = "این کاربری ثبت نشده است"
             });
             try
             {
-                var user = await _userManager.FindByNameAsync(UserName);
+                var user = await _userManager.FindByIdAsync(forgetPassword.UserId);
                 if (user != null)
                 {
-                    result = await _userManager.ResetPasswordAsync(user, Token, NewPassword);
+                    result = await _userManager.ResetPasswordAsync(user, Token, forgetPassword.NewPassword);
 
                 }
             }
@@ -316,10 +317,10 @@ namespace RegitrationAPI.Controllers
         }
         #endregion
 
-        #region RequestForResetPassword
+        #region RequestForForgetPassword
         [HttpGet]
-        [Route("RequestForResetPassword")]
-        public async Task<IdentityResult> RequestForResetPassword([FromHeader] string email)
+        [Route("RequestForForgetPassword")]
+        public async Task<IdentityResult> RequestForForgetPassword([FromQuery] string email)
         {
             var result = IdentityResult.Failed(new IdentityError()
             {
@@ -332,9 +333,12 @@ namespace RegitrationAPI.Controllers
                 if (user != null)
                 {
                     string code = await _userManager.GeneratePasswordResetTokenAsync(user);
-                    code = HttpUtility.UrlEncode(code);
-                    Email.SendEmailForgotPassword(user.Email, user.FirstName, user.UserName, code);
-                    return IdentityResult.Success;
+                    if (code != null)
+                    {
+                        code = HttpUtility.UrlEncode(code);
+                        Email.SendEmailForgotPassword(user.Email, user.FirstName, user.UserName, code, user.Id);
+                        return IdentityResult.Success;
+                    }
                 }
             }
             catch (Exception)
@@ -367,7 +371,7 @@ namespace RegitrationAPI.Controllers
                 {
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = HttpUtility.UrlEncode(code);
-                    Email.SendComfirmEmailAgain(user.Email, user.UserName, code, user.FirstName);
+                    Email.SendComfirmEmailAgain(user.Email, user.UserName, code, user.FirstName, user.Id);
                     return IdentityResult.Success;
                 }
             }
@@ -424,7 +428,7 @@ New Password : {passwordModel.NewPassword}";
         [HttpGet]
         [Authorize(Roles = "User")]
         [Route("RequestChangeEmail")]
-        public async Task<IdentityResult> RequestChangeEmail([FromHeader] string Authorization,[FromQuery] string NewEmail)
+        public async Task<IdentityResult> RequestChangeEmail([FromHeader] string Authorization, [FromQuery] string NewEmail)
         {
             #region DefaultResult
             var result = IdentityResult.Failed(new IdentityError()
@@ -467,7 +471,7 @@ New Password : {passwordModel.NewPassword}";
                 }
                 #endregion
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
             return result;
@@ -498,7 +502,6 @@ New Password : {passwordModel.NewPassword}";
             return result;
         }
         #endregion
-
 
         #region encrypt
         public string Encrypt(string encryptString)
