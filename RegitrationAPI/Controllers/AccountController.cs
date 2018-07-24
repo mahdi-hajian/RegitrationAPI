@@ -255,16 +255,6 @@ namespace RegitrationAPI.Controllers
         }
         #endregion
 
-        #region IsUserLogin
-        [Authorize]
-        [HttpGet]
-        [Route("IsUserLogin")]
-        public bool IsUserLogin()
-        {
-            return true;
-        }
-        #endregion
-
         #region ConfirmEmail
         [HttpGet]
         [Route("ConfirmEmail")]
@@ -553,6 +543,46 @@ New Password : {passwordModel.NewPassword}";
                 }
             }
             return cipherText;
+        }
+        #endregion
+
+        #region IsUserLogin
+        [Authorize]
+        [HttpGet]
+        [Route("IsUserLogin")]
+        public bool IsUserLogin()
+        {
+            return true;
+        }
+        #endregion
+
+        #region IsUser
+        [Authorize(Roles = "User")]
+        [HttpGet]
+        [Route("IsUser")]
+        public bool IsUser()
+        {
+            return true;
+        }
+        #endregion
+
+        #region IsAdmin
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        [Route("IsAdmin")]
+        public bool IsAdmin()
+        {
+            return true;
+        }
+        #endregion
+
+        #region IsLeader
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        [Route("IsLeader")]
+        public bool IsLeader()
+        {
+            return true;
         }
         #endregion
     }

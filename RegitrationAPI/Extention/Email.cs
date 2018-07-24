@@ -6,7 +6,7 @@ using System.Net.Mail;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-
+ 
 namespace RegitrationAPI.Extention
 {
     public static class Email
