@@ -497,8 +497,8 @@ namespace RegitrationAPI.Controllers
         {
             var result = IdentityResult.Failed(new IdentityError()
             {
-                Code = "InvalidLink",
-                Description = "Desciption"
+                Code = "BreakSendNews",
+                Description = "خبرنامه ارسال نشد"
             });
             try
             {
