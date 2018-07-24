@@ -97,6 +97,7 @@ namespace RegitrationAPI
                 });
             #endregion
             services.AddMvc();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -109,7 +110,6 @@ namespace RegitrationAPI
 
 
             //GetDb(app);
-
             app.UseCors("SiteCorsPolicy");
             app.UseStaticFiles();
 

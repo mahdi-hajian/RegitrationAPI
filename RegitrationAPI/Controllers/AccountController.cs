@@ -23,6 +23,7 @@ namespace RegitrationAPI.Controllers
     //[EnableCors("SiteCorsPolicy")]
     [Produces("application/json")]
     [Route("api/[controller]")]
+    [Authorize]
     public class AccountController : Controller
     {
         #region Other
@@ -50,6 +51,7 @@ namespace RegitrationAPI.Controllers
         #endregion
 
         #region Register
+        [AllowAnonymous]
         [HttpPost]
         [Route("Register")]
         public async Task<IdentityResult> Register([FromBody]AccountModel model)
@@ -145,6 +147,7 @@ namespace RegitrationAPI.Controllers
 
         #region Login
         [HttpPost]
+        [AllowAnonymous]
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody]LoginModel model)
         {
@@ -223,7 +226,7 @@ namespace RegitrationAPI.Controllers
 
         #region GetDetails
         [HttpGet]
-        [Authorize(Roles = "user")]
+        [Authorize(Roles = "User")]
         [Route("GetDetails")]
         public List<string> GetDetails([FromHeader] string Authorization)
         {
@@ -492,6 +495,7 @@ namespace RegitrationAPI.Controllers
         #region SendNews
         [Authorize(Roles = "Admin, Leader")]
         [HttpPost]
+        
         [Route("SendNews")]
         public async Task<IdentityResult> SendNews([FromBody] SendNewsModel SendNews, [FromHeader] string Authorization)
         {
