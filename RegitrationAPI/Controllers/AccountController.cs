@@ -223,7 +223,7 @@ namespace RegitrationAPI.Controllers
 
         #region GetDetails
         [HttpGet]
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "user")]
         [Route("GetDetails")]
         public List<string> GetDetails([FromHeader] string Authorization)
         {
@@ -355,8 +355,8 @@ namespace RegitrationAPI.Controllers
                 var Ramovebearer = Authorization.Replace("bearer ", "");
                 var Token = new JwtSecurityToken(Ramovebearer);
                 var ClaimsLST = Token.Claims.ToArray();
-                var userEmail = ClaimsLST[1];
-                var user = await _userManager.FindByEmailAsync(userEmail.Value);
+                var userUserName = ClaimsLST[0];
+                var user = await _userManager.FindByNameAsync(userUserName.Value);
                 if (user != null)
                 {
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -386,6 +386,7 @@ namespace RegitrationAPI.Controllers
             });
             try
             {
+                int a = 2;
                 var Ramovebearer = Authorization.Replace("bearer ", "");
                 var Token = new JwtSecurityToken(Ramovebearer);
                 var ClaimsLST = Token.Claims.ToArray();
@@ -398,12 +399,7 @@ namespace RegitrationAPI.Controllers
                     result = await _userManager.ChangePasswordAsync(user, passwordModel.CurrentPassword, passwordModel.NewPassword);
                     if (result == IdentityResult.Success)
                     {
-                        string Body = $@"هشدار تغییر رمز عبور
-
-رمز عبور شما تغییر کرده است و مشخصات جدید شما به این صورت میباشد
-User Name : {user.UserName}
-New Password : {passwordModel.NewPassword}";
-                        Email.SendEmail(user.Email, Body, "تغییر رمز عبور");
+                        Email.ChangePassword(user.Email, user.UserName, user.FirstName, passwordModel.NewPassword);
                     }
                 }
             }
@@ -484,6 +480,41 @@ New Password : {passwordModel.NewPassword}";
                 if (user != null)
                 {
                     result = await _userManager.ChangeEmailAsync(user, ChangeEmail.NewEmail, Token);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return result;
+        }
+        #endregion
+
+        #region SendNews
+        [Authorize(Roles = "Admin, Leader")]
+        [HttpPost]
+        [Route("SendNews")]
+        public async Task<IdentityResult> SendNews([FromBody] SendNewsModel SendNews, [FromHeader] string Authorization)
+        {
+            var result = IdentityResult.Failed(new IdentityError()
+            {
+                Code = "InvalidLink",
+                Description = "Desciption"
+            });
+            try
+            {
+                var Ramovebearer = Authorization.Replace("bearer ", "");
+                var Token = new JwtSecurityToken(Ramovebearer);
+                var ClaimsLST = Token.Claims.ToArray();
+                var userUserName = ClaimsLST[0];
+                var user = await _userManager.FindByNameAsync(userUserName.Value);
+                if (user != null)
+                {
+                    var emailLST = _context.Users.ToList();
+                    foreach (var item in emailLST)
+                    {
+                        Email.SendNewsLetter(item.Email, SendNews.Category, item.FirstName, SendNews.NewsSubject, SendNews.Content, user.UserName);
+                    }
+                    return IdentityResult.Success;
                 }
             }
             catch (Exception)

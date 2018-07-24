@@ -11,8 +11,10 @@ namespace RegitrationAPI.Extention
 {
     public static class Email
     {
+        #region Email Sender
         private static readonly string EmailSender = "AgentMahdihajian@gmail.com";
         private static readonly string PasswordEmailSender = "";
+        #endregion
 
         #region Send Email
         public async static void SendEmail(string EmailTo, string body, string subject)
@@ -153,9 +155,40 @@ namespace RegitrationAPI.Extention
         }
         #endregion
 
-        #region MyRegion
-        //متد ارسال خبرنامه
-        public static void SendNewsLetter(string userId, string email, string category, string name, string content)
+        #region ChangePassword
+        public static void ChangePassword(string email, string userName, string firstName, string newPassword)
+        {
+            //استفاده از قالب موجود در ای پی پی دیتا
+            string strRootRelativePathName =
+                "App_Data/LocalizedEmailTemplates/ChangeEmail.htm";
+
+            //ایجاد یک رشته و مراحل تبدیل مراحل نسبی به فیزیکی
+            string strPathName =
+                Path.GetFullPath(strRootRelativePathName);
+
+            //استفاده از متد رید کلاس فایل برای خواندن مسیر فیزیکی
+            string strEmailBody = File.ReadAllText(strPathName);
+
+            //جایگزینی مقادیر موجود در فایل خوانده شده با مقادیر داده شده
+            strEmailBody = strEmailBody
+                            .Replace("[NEW_PASSWORD]", newPassword)
+                            .Replace("[FIRST_NAME]", firstName)
+                            .Replace("[USER_NAME]", userName);
+
+            SendEmail(email, strEmailBody, "تغییر پسورد");
+        }
+        #endregion
+
+        #region SendNewsLetter
+        /// <summary>
+        /// متد ارسال خبرنامه
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="email"></param>
+        /// <param name="category"></param>
+        /// <param name="name"></param>
+        /// <param name="content"></param>
+        public static void SendNewsLetter(string email, string category, string firstName, string newsSubject, string content, string adminSender)
         {
             //استفاده از قالب موجود در ای پی پی دیتا
             string strRootRelativePathName =
@@ -170,18 +203,17 @@ namespace RegitrationAPI.Extention
 
             //جایگزینی مقادیر موجود در فایل خوانده شده با مقادیر داده شده
             strEmailBody = strEmailBody
-                            .Replace("[USER_NAME]", email)
+                            .Replace("[Frist_Name]", firstName)
                             .Replace("[CAT]", category)
-                            .Replace("[NAME]", name)
+                            .Replace("[NEWS_SUBJECT]", newsSubject)
+                            .Replace("[ADMIN_SENDER]", adminSender)
                             .Replace("[CONTENT]", content);
-            //ایجاد یک شی از میل آدرس با 3 پارامتر
-            System.Net.Mail.MailAddress oMailAddress =
-                new System.Net.Mail.MailAddress(email, userId, System.Text.Encoding.UTF8);
-            //استفاده از متد سند کلاس میل مسیج
-            // MailMessage.Send
-            // (oMailAddress, "خبرنامه!", strEmailBody, System.Net.Mail.MailPriority.High);
-        }
 
+            SendEmail(email, strEmailBody, "خبرنامه");
+        }
+        #endregion
+
+        #region MyRegion
 
         //متد ارسال تماس با ما
         public static void SendContact(string name, string email, string subject, string message)
