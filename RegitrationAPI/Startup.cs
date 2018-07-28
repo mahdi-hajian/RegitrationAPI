@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,25 +38,29 @@ namespace RegitrationAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            #region UseCors
             // Setup CORS
             // add "ClientDomain": "http://localhost:4200" in appsetting.json
             // add app.UseCors("SiteCorsPolicy"); in Configure method
 
-            var corsBuilder = new CorsPolicyBuilder();
+            var corsBuilder = new CorsPolicyBuilder(); 
             corsBuilder.AllowAnyHeader();
             corsBuilder.AllowAnyMethod();
-            corsBuilder.WithOrigins("http://localhost:4200"); // for a specific url. Don't add a forward slash on the end!
-            //corsBuilder.AllowAnyOrigin(); // For anyone access.
+            //corsBuilder.WithOrigins("http://localhost:4200"); // for a specific url. Don't add a forward slash on the end!
+            corsBuilder.AllowAnyOrigin(); // For anyone access.
             corsBuilder.AllowCredentials();
             services.AddCors(options =>
             {
                 options.AddPolicy("SiteCorsPolicy", corsBuilder.Build());
             });
+            #endregion
 
-
+            #region SetConnectionString
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            #endregion
 
+            #region SetIdentity
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 options.Password.RequiredLength = 8;
@@ -69,7 +74,7 @@ namespace RegitrationAPI
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders()
                 .AddErrorDescriber<NewIdentityErrorDescriber>();
-
+            #endregion SetIdentity
 
             #region AddAuthentication
             services.AddAuthentication(options =>
@@ -92,10 +97,11 @@ namespace RegitrationAPI
                         ClockSkew = TimeSpan.Zero,
                         RequireExpirationTime = false,
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("KLHIUYH*&6876ty87toi7uyt87**/f+9ffdefg"))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("$#$#^U%ERYTGF87687o6yiug*(&^*&^*/-JHTFYDtrdrt~ytytkf"))
                     };
                 });
             #endregion
+
             services.AddMvc();
 
         }

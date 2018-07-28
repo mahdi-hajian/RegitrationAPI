@@ -109,16 +109,19 @@ namespace RegitrationAPI.Controllers
                 #endregion
 
                 #region set roles
-                if (user.UserName.ToUpper() == "ADMIN")
+                if (result == IdentityResult.Success)
                 {
-                    await _userManager.AddToRoleAsync(user, "Leader");
-                    await _userManager.AddToRoleAsync(user, "Admin");
-                    await _userManager.AddToRoleAsync(user, "Manager");
-                    await _userManager.AddToRoleAsync(user, "User");
-                }
-                else
-                {
-                    await _userManager.AddToRoleAsync(user, "User");
+                    if (user.UserName.ToUpper() == "ADMIN")
+                    {
+                        await _userManager.AddToRoleAsync(user, "Leader");
+                        await _userManager.AddToRoleAsync(user, "Admin");
+                        await _userManager.AddToRoleAsync(user, "Manager");
+                        await _userManager.AddToRoleAsync(user, "User");
+                    }
+                    else
+                    {
+                        await _userManager.AddToRoleAsync(user, "User");
+                    }
                 }
                 #endregion
 
@@ -153,6 +156,7 @@ namespace RegitrationAPI.Controllers
         {
             try
             {
+
                 #region Create JWT Token
                 var user = await _userManager.FindByNameAsync(model.UserName);
                 var CheckPassword = await _userManager.CheckPasswordAsync(user, model.Password);
@@ -174,7 +178,7 @@ namespace RegitrationAPI.Controllers
                     {
                         claims.Add(new Claim(ClaimTypes.Role, item));
                     }
-                    var signinkey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("KLHIUYH*&6876ty87toi7uyt87**/f+9ffdefg"));
+                    var signinkey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("$#$#^U%ERYTGF87687o6yiug*(&^*&^*/-JHTFYDtrdrt~ytytkf"));
 
                     var Token = new JwtSecurityToken(
                         expires: DateTime.Now.AddHours(12),
@@ -226,7 +230,6 @@ namespace RegitrationAPI.Controllers
 
         #region GetDetails
         [HttpGet]
-        [Authorize(Roles = "User")]
         [Route("GetDetails")]
         public List<string> GetDetails([FromHeader] string Authorization)
         {
@@ -260,6 +263,7 @@ namespace RegitrationAPI.Controllers
 
         #region ConfirmEmail
         [HttpGet]
+        [AllowAnonymous]
         [Route("ConfirmEmail")]
         public async Task<IdentityResult> ConfirmEmail([FromQuery] string userId, [FromHeader] string Token)
         {
@@ -286,6 +290,7 @@ namespace RegitrationAPI.Controllers
 
         #region ForgetPassword
         [HttpPost]
+        [AllowAnonymous]
         [Route("ForgetPassword")]
         public async Task<IdentityResult> ForgetPassword([FromBody] ForgetPasswordModel forgetPassword, [FromHeader] string Token)
         {
@@ -312,6 +317,7 @@ namespace RegitrationAPI.Controllers
 
         #region RequestForForgetPassword
         [HttpGet]
+        [AllowAnonymous]
         [Route("RequestForForgetPassword")]
         public async Task<IdentityResult> RequestForForgetPassword([FromQuery] string email)
         {
@@ -495,7 +501,7 @@ namespace RegitrationAPI.Controllers
         #region SendNews
         [Authorize(Roles = "Admin, Leader")]
         [HttpPost]
-        
+
         [Route("SendNews")]
         public async Task<IdentityResult> SendNews([FromBody] SendNewsModel SendNews, [FromHeader] string Authorization)
         {
@@ -612,7 +618,7 @@ namespace RegitrationAPI.Controllers
         #endregion
 
         #region IsLeader
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Leader")]
         [HttpGet]
         [Route("IsLeader")]
         public bool IsLeader()
